@@ -1,0 +1,19 @@
+{
+  "name": "blobs",
+  "version": "1.0.0",
+  "description": "this is a blobs game with would be a multiplayer game",
+  "main": "blobserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "game"
+  ],
+  "author": "Aviel Berezin",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0",
+    "synaptic": "^1.1.4"
+  }
+}
