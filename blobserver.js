@@ -4,8 +4,10 @@ var express = require('express')
 
 var synaptic = require('synaptic')
 
+var fs = require('fs')
+
 var app = express()
-var server = app.listen(3003)
+var server = app.listen(3000)
 app.use(express.static('BlobsClient'))
 console.log("server is running")
 
@@ -49,64 +51,6 @@ const feeder = (function(foodDeficit, previousTime) {
         previousTime = currentTime
     }
 })(10, Date.now())
-
-const aiIntentify = function() {
-    var inputBlobs = 4
-
-    var trainData = []
-
-    var learningRate = 0.3
-
-    var inputLayer = new synaptic.Layer(1+inputBlobs*3)
-    var hidenLayer = new synaptic.Layer(inputBlobs*2)
-    var outputLayer = new synaptic.Layer(2)
-
-    inputLayer.project(hidenLayer)
-    hidenLayer.project(outputLayer)
-
-    var neuralNet = new synaptic.Network({
-        input: inputLayer,
-        hidden: [hidenLayer],
-        output: outputLayer
-    });
-
-    trainData.forEach(function(entry) {
-        neuralNet.activate(entry[0])
-        neuralNet.propagate(learningRate, entry[1])
-    })
-
-    var standalone = neuralNet.standalone()
-
-    return function(sb, id) {
-        if (isNaN(id) || id > 0) return;
-    
-        var b0 = sb.worldview[0]
-        var others = sb.worldview.slice(1, inputBlobs+1)
-        function toData(b) {
-            return [
-                angleToData(vec.angle(vec.sub(b.pos, b0.pos))),
-                distToData(vec.dist(b.pos, b0.pos)),
-                areaToData(b.area)
-            ]
-        }
-        function angleToData(a) { return map(a, -Math.PI,Math.PI, 0,1) }
-        function distToData(d) { return map(d, 0,viewRadious*2, 0,1) }
-        function areaToData(a) { return map(a, 0,viewRadious**2*Math.PI, 0,1) }
-        function dataToAngle(d) { return map(d, 0,1, -Math.PI,Math.PI) }
-        function dataToDist(d) { return map(d, 0,1, 0,viewRadious*2) }
-
-        var data = others.map(toData).reduce((a,b)=>a.concat(b), [b0.area])
-        while (data.length < 1+inputBlobs*3) {
-            data.push(map(Math.random(),0,1,-Math.PI,Math.PI))
-            data.push(viewRadious*2)
-        }
-
-        // console.log('ai with input length '+data.length+' of input '+data)
-        var result = standalone(data)
-        console.log('ai results '+result)
-        sb.intention = vec.add(b0.pos, vec.fromAD(dataToAngle(result[0]), dataToDist(result[1])))
-    }
-}()
 
 setInterval(updateBlobs, 10)
 function updateBlobs() {

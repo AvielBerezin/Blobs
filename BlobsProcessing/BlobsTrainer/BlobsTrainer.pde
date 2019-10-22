@@ -4,37 +4,42 @@ int viewRadious;
 
 int area;
 Blob[] blobs;
-ArrayList<float[][]> trainingData;
+JSONArray trainingData;
 PVector worldCenter;
 
 void setup() {
   size(700, 700);
-  trainingData = new ArrayList();
+  trainingData = new JSONArray();
   view = new PVector(width/2, height/2);
-  println("init");
-  //init();
-  //drawUpdate();
+  init();
+  drawUpdate();
 }
+
+void draw() {}
 
 void mousePressed() {
-  println("mouse");
-  //trainingData.add(toData());
-  //println(trainingData);
-  //init();
-  //drawUpdate();
+  trainingData.append(toData());
+  //println(trainingData.toString());
+  saveJSONArray(trainingData, "./training data.json");
+  init();
+  drawUpdate();
 }
 
-float[][] toData() {
-  float[][] trainingEntry = new float[2][];
-  trainingEntry[0] = new float[13];
-  trainingEntry[0][0] = areaToData(area);
+JSONArray toData() {
+  JSONArray trainingEntry = new JSONArray();
+  JSONArray te0 = new JSONArray();
+  JSONArray te1 = new JSONArray();
+  
+  te0.append(areaToData(area));
   for (int i = 0; i < blobs.length; i++) {
-    blobs[i].toData(trainingEntry[0], 1+i*3); 
+    blobs[i].appendData(te0); 
   }
-  trainingEntry[1] = new float[2];
+  trainingEntry.append(te0);
+  
   PVector intention = new PVector(mouseX-width/2, mouseY-height/2);
-  trainingEntry[1][0] = angleToData(angle(intention));
-  trainingEntry[1][1] = distToData(intention.mag());
+  te1.append(angleToData(angle(intention)));
+  te1.append(distToData(intention.mag()));
+  trainingEntry.append(te1);
   
   return trainingEntry;
 }
@@ -45,7 +50,7 @@ void init() {
   worldCenter = randomVec(worldRadious).add(view);
   
   area = randomArea();
-  blobs = new Blob[] { new Blob(), new Blob(), new Blob(), new Blob() };
+  blobs = new Blob[] { new Blob(), new Blob() };
   
   Compare<Blob> cmpByAreaReversed = new Compare<Blob>() {
     @Override public boolean lte(Blob b1, Blob b2) {
@@ -87,17 +92,25 @@ float dataToDist(float d) { return map(d, 0, 1, 0, viewRadious*2); }
 int randomArea() { return floor(exp(map(random(2^20), 0, 2^20, log(2^4), log(viewRadious*viewRadious*PI)))); }
 
 void drawBlob(float x, float y, int area) {
-  fill(color(255*0.7));
-  stroke(color(255*1));
+  fill(color(255*0.7, 100));
+  stroke(color(255*1, 100));
   ellipse(x+width/2,y+height/2,sqrt(area/PI),sqrt(area/PI));
 }
 
 float angle(PVector v) {
   float a = atan(v.y/v.x);
   while (a < 0) a += PI;
-  while (a > Math.PI) a -= PI;
+  while (a > PI) a -= PI;
 
   if (v.y < 0) a -= PI;
+  if (v.y == 0) {
+    if (v.x < 0) {
+      a = -PI;
+    }
+    else {
+      a = 0;
+    }
+  }
   return a;
 }
   
@@ -109,10 +122,10 @@ class Blob {
     area = randomArea();
   }
   
-  public void toData(float[] result, int from) {
-    result[from+0] = angleToData(angle(pos)); 
-    result[from+1] = distToData(pos.mag());
-    result[from+2] = areaToData(area);
+  public void appendData(JSONArray result) {
+    result.append(angleToData(angle(pos))); 
+    result.append(distToData(pos.mag()));
+    result.append(areaToData(area));
   }
   
   public void draw() {

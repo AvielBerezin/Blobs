@@ -26,7 +26,7 @@ function randomizeMainColor() {
   mainBri = Math.floor(map(Math.random(),0,1,20,100))
 }
 
-var adress ='http://25.69.150.211:3003'//'http://[2a02:ed3:2da:d00:1114:1e92:c36:d35c]:3000'
+var adress ='http://192.168.1.26:3000'
 function setup() {
   socket = io.connect(adress)
   randomizeMainColor()
